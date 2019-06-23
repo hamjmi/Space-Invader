@@ -1,0 +1,527 @@
+<!Name : Mohd Hamid>
+<!Email: hamid7825@gmail.com>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html>
+  <head>
+    <title>Space Demo</title>
+    <link href="css/style.css" media="all" rel="stylesheet" type="text/css"/>  
+	<script language="javascript" src="scripts/jquery.min.js" type="text/javascript"></script>
+	<script language="javascript" src="scripts/util.js" type="text/javascript"></script>
+	<script language="javascript" src="scripts/sprite.js" type="text/javascript"></script>
+	<script language="javascript" src="scripts/sound.js" type="text/javascript"></script>
+	<script language="javascript" src="scripts/jquery.hotkeys.js" type="text/javascript"></script>
+	<script language="javascript" src="scripts/key_status.js" type="text/javascript"></script>
+  </head>
+  <body>
+    
+	
+	<canvas id="myCanvas" width="512px" height="480px" style="border:1px solid #d3d3d3;">
+		Your browser does not support the canvas element.
+	</canvas>
+	<script>
+		//Creating Canvas
+		var canvas = document.getElementById("myCanvas");
+		var ctx = canvas.getContext("2d");
+		canvas.width=512;
+		canvas.height=480;
+		var score=0;
+		var FPS=30;
+		var level=1;
+		var myVar=null;
+		var limit=0.05;
+		var count=0;
+		var myVar2=null;
+		
+		//Creating Game Loop
+		myVar=setInterval(function(){
+			//Drawing On canvas
+			draw();
+			
+			//Updating the canvas(frame)
+			update();
+		},1000/FPS);
+		
+		
+		
+		//to stop the Game loop
+		function myStopFunction() {
+			myVar2=setTimeout(function(){  clearInterval(myVar);GameOver();}, 1000/8);
+			
+		}
+		
+		//to display the last Frame
+		function GameOver(){
+			clearTimeout(myVar2);
+			var background = new Image();
+			background.src = "images/space.jpg";
+			ctx.drawImage(background,0,0);
+			ctx.font = "80px Comic Sans MS";
+			ctx.fillStyle = "red";
+			ctx.textAlign = "center";
+			//ctx.strokeText("GameOver", 512/2, 400/2);
+			ctx.fillText("Game Over", canvas.width/2, (canvas.height-80)/2);
+			ctx.font = "40px Comic Sans MS";
+			ctx.fillText("Score : ", 400/2, 512/2);
+			ctx.fillText(score,700/2,512/2);
+			ctx.font = "20px Comic Sans MS";
+			ctx.fillText("Refresh the page to Start Again!", canvas.width/2, 420);
+			ctx.font = "20px Comic Sans MS";
+			ctx.fillText("© Mohd Hamid", canvas.width/2, 460);
+		}
+		
+		//to update the frame
+		function update()
+		{
+			//moving left
+			if(keydown.left){
+				player.x-=8;
+			}
+			
+			//moving right
+			if(keydown.right)
+			{
+				player.x+=8;
+			}
+			
+			//for shooting
+			if(keydown.space)
+			{
+				player.shoot();
+			}
+			
+			//ensuring player doesn't move beyond the boundaries of canvas
+			player.x=player.x.clamp(0,canvas.width-player.width);
+			
+			//for updating each bullet
+			playerBullets.forEach(function(bullet){
+				bullet.update();
+			});
+			
+			//for filtering out the active bullets
+			playerBullets=playerBullets.filter(function(bullet){
+				return bullet.active;
+			});
+			
+			//for updating each enemy1
+			enemies.forEach(function(enemy){
+				enemy.update();
+			});
+			
+			//for filtering out the active enemy1
+			enemies=enemies.filter(function(enemy){
+				return enemy.active;
+			});
+			
+			//for updating each enemy2
+			enemies2.forEach(function(enemy2){
+				enemy2.update();
+			});
+			
+			//for filtering out the active enemy2
+			enemies2=enemies2.filter(function(enemy2){
+				return enemy2.active;
+			});
+			
+			//for inserting enemy of type 1, it's rate is increased with increases in level
+			if(Math.random()<limit){
+				enemies.push(Enemy());
+			}
+			
+			//insering enemy of type 2
+			if(Math.random()<0.02){
+				enemies2.push(Enemy2());
+			}
+			
+			//handle any collision if happen
+			handleCollisions();
+			
+		};
+		
+		//to draw the frame on canvas
+		function draw()
+		{	
+			//for creating space background
+			var background = new Image();
+			background.src = "images/space.jpg";
+			 
+			//ctx.clearRect(0,0,512,480);
+			ctx.drawImage(background,0,0);
+			
+			//for filling the score and level
+			ctx.fillText("Score : ",320,20);
+			ctx.fillText("Level : ",320,40);
+			//ctx.fillStyle="#000";
+			//ctx.fillText("Hamid!",textX,textY);
+			
+			//Drawing the player
+			player.draw();
+			
+			//drawing each and every active bullet
+			playerBullets.forEach(function(bullet){
+				bullet.draw();
+			});
+			
+			//drawing each and every active enemy 1
+			enemies.forEach(function(enemy){
+				enemy.draw();
+			});
+			
+			//drawing each and every active enemy 2
+			enemies2.forEach(function(enemy2){
+				enemy2.draw();
+			});
+			
+			//ctx.fillStyle="#000";
+			ctx.font = "20px Arial";
+			ctx.fillStyle = "red";
+			ctx.fillText(score,440,20);
+			//ctx.fillText(count,440,60);
+			ctx.fillText(level,440,40);
+		}
+		
+		// for creating the player
+		var player={
+			color:"#00A",
+			x:256,
+			y:350,
+			width:20,
+			height:20,
+			draw: function(){
+				ctx.fillStyle=this.color;
+				ctx.fillRect(this.x,this.y,this.width,this.height);
+			}
+		};
+		
+		var playerBullets=[];
+		
+		//for handling the bullet
+		function Bullet(I){
+			I.active=true;
+			
+			I.xVelocity=0;
+			I.yVelocity=-I.speed;
+			I.width=3;
+			I.height=3;
+			I.color="yellow";
+			I.inBounds= function(){
+				return I.x>=0 && I.x<=canvas.width && I.y>=0 && I.y<=canvas.height;
+			};
+			
+			//for drawing the bullet
+			I.draw= function(){
+					ctx.fillStyle=this.color;
+					ctx.fillRect(this.x,this.y,this.width,this.height);
+			};
+			
+			//updates the position of bullet
+			I.update= function(){
+				I.x+=I.xVelocity;
+				I.y+=I.yVelocity;
+				I.active=I.active && I.inBounds();
+			};
+			
+			return I;
+		}
+		
+		//for shooting the bullet
+		player.shoot=function()
+		{
+			//console.log("Pew pew");
+			Sound.play("shoot");
+			var bulletPosition=this.midpoint();
+			
+			playerBullets.push(Bullet({
+				speed:5,
+				x: bulletPosition.x,
+				y: bulletPosition.y
+			}));
+		};	
+		player.midpoint=function()
+		{
+			return{
+				x: this.x+this.width/2,
+				y: this.y+this.height/2
+				};
+		};
+		
+		player.sprite=Sprite("player");
+		//for drawing the player
+		player.draw=function(){
+		
+			this.sprite.draw(ctx,this.x,this.y);};
+		
+		//for removing the player when it dies
+		player.explode=function()
+		{
+			this.active=false;
+		};
+		enemies=[];
+		
+		//for handling the Enemy1
+		function Enemy(I){
+				I=I || {};
+				
+				I.active=true;
+				I.pos=false;
+				I.age=Math.floor(Math.random()*128);
+				I.color="#A2B";
+				I.x=canvas.width/4 + Math.random()*canvas.width/2;
+				I.x=I.x.clamp(0,canvas.width-32);
+				I.y=0;
+				I.xVelocity=0;
+				
+				I.yVelocity=level+1;
+				
+				I.explodeTime=0;
+				I.width=32;
+				I.height=32;
+				I.inBounds= function(){
+					return I.x>=0 && I.x<=canvas.width && I.y>=0 && I.y<=canvas.height;
+				};
+				
+				I.sprite=Sprite("enemy");
+				//for drawing the enemy 1
+				I.draw= function(){
+					
+					//drawing enemy when it is active
+					if(I.explodeTime==0){
+					this.sprite.draw(ctx,this.x,this.y);
+					//ctx.fillStyle=this.color;
+					//ctx.fillRect(this.x,this.y,this.width,this.height);
+					}
+					//for drawing the explosion when enemy dies
+					else
+					{
+						ctx.fillStyle="orangered";
+						ctx.beginPath();
+						ctx.arc(I.x,I.y,20,0,Math.PI*2,false);
+						ctx.fill();
+						ctx.fillStyle="salmon";
+						ctx.beginPath();
+						ctx.arc(I.x,I.y,15,0,Math.PI*2,false);
+						ctx.fill();
+						ctx.fillStyle="pink";
+						ctx.beginPath();
+						ctx.arc(I.x,I.y,10,0,Math.PI*2,false);
+						ctx.fill();
+						I.active=false;
+					}
+					
+				};
+			
+				//for updating enemy2 position and speed at each frame
+				I.update= function(){
+					I.x+=I.xVelocity;
+					I.y+=I.yVelocity;
+					if(I.active==true && I.pos==false && I.y>=canvas.height-110){
+						count++;
+						I.pos=true;
+					}
+					I.xVelocity=3*Math.sin(I.age*Math.PI/64);
+					I.age++;
+					
+					I.active=I.active && I.inBounds();
+				};
+				
+				//for exploding sound and calling the function which will draw the explosion
+				I.explode=function()
+				{
+					I.explodeTime=2;
+					Sound.play("explosion");
+					//this.active=false;
+				};
+				
+				//increasing the spped of enemy when level is increased
+				I.speed=function()
+				{
+					I.yVelocity+=1;
+				}
+				return I;
+		};
+		
+		enemies2=[];
+		//for handling the Enemy2
+		function Enemy2(I){
+				I=I || {};
+				
+				I.active=true;
+				//pos is used to check whether that enemy already crossed the player.
+				I.pos=false;
+				I.age=Math.floor(Math.random()*128);
+				I.color="#A2B";
+				I.x=canvas.width/4 + Math.random()*canvas.width/2;
+				I.x=I.x.clamp(0,canvas.width-32);
+				I.y=0;
+				I.xVelocity=0;
+				
+				I.yVelocity=level+1;
+				I.explodeTime=0;
+				
+				I.width=32;
+				I.height=32;
+				
+				I.inBounds= function(){
+					return I.x>=0 && I.x<=canvas.width && I.y>=0 && I.y<=canvas.height;
+				};
+				
+				I.sprite=Sprite("enemy1");
+				//for drawing the enemy2 
+				I.draw= function(){
+					
+					//drawing enemy when it is active
+					if(I.explodeTime==0){
+						this.sprite.draw(ctx,this.x,this.y);
+						//ctx.fillStyle=this.color;
+						//ctx.fillRect(this.x,this.y,this.width,this.height);
+					}
+					//for creating the explosion when enemy dies
+					else
+					{
+						ctx.fillStyle="orangered";
+						ctx.beginPath();
+						ctx.arc(I.x,I.y,20,0,Math.PI*2,false);
+						ctx.fill();
+						ctx.fillStyle="salmon";
+						ctx.beginPath();
+						ctx.arc(I.x,I.y,15,0,Math.PI*2,false);
+						ctx.fill();
+						ctx.fillStyle="pink";
+						ctx.beginPath();
+						ctx.arc(I.x,I.y,10,0,Math.PI*2,false);
+						ctx.fill();
+						I.active=false;
+					}
+				
+				};
+			
+				//for updating enemy2 position and speed at each frame
+				I.update= function(){
+					I.x+=I.xVelocity;
+					I.y+=I.yVelocity;
+					if(I.active==true && I.pos==false && I.y>=canvas.height-110){
+						count++;
+						I.pos=true;
+					}
+					I.xVelocity=3*Math.sin(I.age*Math.PI/64);
+					I.age++;
+					
+					I.active=I.active && I.inBounds();
+				};
+				
+				//for exploding sound and calling the function which will draw the explosion
+				I.explode=function()
+				{
+					I.explodeTime=2;
+					Sound.play("explosion");
+				};
+				
+				//increasing the spped of enemy when level is increased
+				I.speed=function()
+				{
+					I.yVelocity+=1;
+				}
+				return I;
+		};
+		
+		//for checking if enemy collides either with bullet or player
+		function collides(a,b)
+		{
+			return a.x < b.x + b.width 
+				   && a.x + a.width > b.x 
+				   && a.y < b.y + b.height 
+				   && a.y + a.height > b.y; 
+		}
+		
+		//for handling collision
+		function handleCollisions()
+		{
+			//checking if 3 enemies crosses the player
+			if(count>=3){
+				myStopFunction();
+			}
+			
+			//checking if any bullet collides with any enemy of type 1 & handling it and the scores
+			playerBullets.forEach(function(bullet){
+				enemies.forEach(function(enemy){
+					if(collides(bullet,enemy)){
+						enemy.explode();
+						bullet.active=false;
+						
+						//type 2 increases score by 20
+						score+=10;
+						
+						//increasing level for each 100 points by increasing no. of falling enemies
+						if(score%200==0){
+							level+=1;
+							limit+=0.02;
+							
+							//for each multiple of level by 2 increase the speed of each enemy by 1 unit
+							if(level%2==0)
+							{
+								enemies.forEach(function(enemy){
+								    enemy.speed();
+							    });
+								enemies2.forEach(function(enemy2){
+								    enemy2.speed();
+							    });
+								
+							}
+						}
+					}
+				});
+			});
+			
+			//checking if player collides with any enemy of type 1 & handling it  
+			enemies.forEach(function(enemy){
+				if(collides(enemy,player)){
+					enemy.explode();
+					player.explode();
+					myStopFunction();
+				}
+			});
+			
+			//checking if any bullet collides with any enemy of type 2 & handling it and the scores
+			
+			playerBullets.forEach(function(bullet){
+				enemies2.forEach(function(enemy2){
+					if(collides(bullet,enemy2)){
+						enemy2.explode();
+						bullet.active=false;
+						
+						//type 2 increases score by 20
+						score+=20;
+						
+						//increasing level for each 100 points by increasing no. of falling enemies
+						if(score%200==0){
+							level+=1;
+							limit+=0.02;
+							
+							//for each multiple of level by 2 increase the speed of each enemy by 1 unit
+							if(level%2==0)
+							{
+								enemies.forEach(function(enemy){
+								    enemy.speed();
+							    });
+								enemies2.forEach(function(enemy2){
+								    enemy2.speed();
+							    });
+							}
+						}
+					}
+				});
+			});
+			
+			//checking if player collides with any enemy of type 2 & handling it  
+			enemies2.forEach(function(enemy2){
+				if(collides(enemy2,player)){
+					enemy2.explode();
+					player.explode();
+					myStopFunction();
+					
+				}
+			});
+		}
+	</script>
+
+  </body>
+</html>

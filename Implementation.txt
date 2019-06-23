@@ -1,0 +1,79 @@
+This is a simple HTML canvas game called Space Demo. 
+It consists of enemies falling from the sky, and a player who must kill them by firing bullets to win the game. 
+Player can move left and right using the arrow keys and can fire bullets using the space bar.
+
+GameOver's when either player collides with any enemy or any 3 enemies crosses the player.
+Scoring is also done.
+Level is increased everytime when score gets increased by 200 which inturns increases the no. of enemy.
+Speed of falling enemy is increased everytime when score gets increased by 400.
+
+It Contains 2 type of enemy.
+Enemy1 gives 10 points while Enemy2 gives 20 points.
+
+When Game is over refresh the page to start again!
+
+Variables used
+	canvas: to refer to the canvas created.
+	ctx: to store the context of the canvas.
+	FPS: no. of frames per seconds used for the game
+	score: to store the score collected.
+	level: to store the no. of levels.
+	count: to store the no. of enemies crossing the player.  
+	myVar: to store the value returned by setInterval of game loop and is used to stop the game.
+	myVar2: to store the value returned by setTimeout.
+	limit: for controlling the amount of enemies are created.
+	playerBullets: contains all the bullets.
+	enemies: contains all the enemy of type 1.
+	enemies2: contains all the enemy of type 2.
+
+First of all Canvas is created with width=512px and height=480px. 
+Set Score and count as 0.
+Score is used for scoring and count is used for counting no. of enemies crossing the player.
+Now the Game loop is created using SetInterval function with 30 fps and it will repeatedly call Draw and Update functions.
+(setInterval : Used to create the game loop with 30 FramesPerSeconds)
+
+Before explaining about Draw and Update function, we should draw player and enemies.
+
+Instance of player is created at x:256px and y:350px & represented using sprite image of player.
+	Shoot: function to create the bullet.
+	Draw: to draw the player.
+	Explode : to inactive the player after collision.
+
+Function to create the bullets.
+	Draw: to draw the bullets.
+	Update: to update the x and y co-ordinates of the bullets. 
+
+Function to Create an instance of enemy.It is same for both the enemy.
+	Initially it is set to active and its pos is false.
+	Its x-cordinate is set randomly using sin function.
+	Draw: to draw the enemy when it is active & to draw the collision using concentric circle after collision.
+	Update: to update the location of enemy at each frame interval.
+			checking if it crosses the player, if yes the increase the value of count and pos is set true.
+	Explode: to make explosion sound after collision.
+	Speed: to increase the speed of the enemy
+
+collides: Used to check if any 2 objects collide or not using simple rectangular collision detection algorithm.
+
+HandleCollision:  for checking if enemy collides with either bullet or player.
+	checks if 3 player crosses the player or not, if yes then call the stopMyFunction.
+	for each bullet and each enemy check if they collides, if yes then explode the enemy,inactive the bullet, increase score and speed accordingly.
+	for each enemy check whether they collided with the player, if yes then explode both and call the stopMyFunction.
+	
+Now we should see Update and Draw function that was referred in Game loop.
+Draw: Background image is set on canvas.
+	  Score and level is printed on top right corner of the canvas.
+	  Player , every bullet and every enemies are drawn.
+
+Update: checks if left and right key is pressed, if yes then move the x-cordinate of player accordingly.
+	    checks if space is pressed, if yes shoot is called to create the bullet.
+		call the update function of bullet and enemies.
+		filter out all the active enemies and bullets.
+		New enemies are inserted.
+		HandleCollision is called.
+
+Now we should see function to end the game.
+	myStopFunction: Used to stop the loop using clearInterval and calling the function to print the game over frame.
+
+Function to print the end frame.
+	GameOver : Used to print the game over frame containing the score and other details.
+ 
