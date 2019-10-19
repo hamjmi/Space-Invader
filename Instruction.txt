@@ -1,3 +1,5 @@
+//string name="mohd hamid";
+//cout<<"Author : "<<hamid<<endl;
 Files:
 Space_demo.html : it is main file to run the game and combines code from all the other files.
 Instructions: it contains all the information regarding the code organization.
